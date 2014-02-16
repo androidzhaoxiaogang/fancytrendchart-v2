@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="FancyTrendChart">
+        <attr name="xAxisColor" format="color" />
+        <attr name="xAxisTextColor" format="color" />
+        <attr name="xGridColor" format="color" />
+        <attr name="yAxisColor" format="color" />
+        <attr name="yAxisTextColor" format="color" />
+        <attr name="yGridColor" format="color" />
+        <attr name="lineColor" format="color" />
+        <attr name="drawGradient" format="boolean" />
+        <attr name="xAxisPadding" format="dimension" />
+        <attr name="yAxisPadding" format="dimension" />
+    </declare-styleable>
+
+</resources>

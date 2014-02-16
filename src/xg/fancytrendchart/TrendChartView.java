@@ -38,14 +38,16 @@ public class TrendChartView extends View {
 	
 	private int lineColor = 0x4cf7d621;
 	private int lineStartColor = 0x4cffffff;
-	private int vertexColor = Color.RED;
+	private int vertexColor = 0xFFFB7722;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
 	
-	private int lineStrokeWidth = 2;
+	private int lineStrokeWidth = 4;
 	private int titleStrokeWidth = 2;
 	private int xAxisStrokeWidth = 2;
+	
+	private int touchState = -2;
 	
 	private int xGridCount = 7;
 	private int yGridCount = 5;
@@ -58,11 +60,14 @@ public class TrendChartView extends View {
 	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
 	
+	private int currentIndex;
+	
 	private float width;
 	private float height;
 	private float titleHeight;
 	private float startXaxis;
-	//private float startYaxis;
+	private float lastTouchEventX;
+	private float currentVertexX;
 	
 	private float[][] vertex;
 	
@@ -143,23 +148,40 @@ public class TrendChartView extends View {
 		vertextPaint = new Paint();
 		vertextPaint.setAntiAlias(true);
 		vertextPaint.setStyle(Paint.Style.STROKE);
+		vertextPaint.setStrokeWidth(lineStrokeWidth);
+		vertextPaint.setColor(xAxisGridColor);
 	}
 	
-	@Override
-	public boolean dispatchTouchEvent(MotionEvent event) {
-		if(disableTouch) {
-			return super.dispatchTouchEvent(event);
-		}
-		
-		return true;
-	}
-
 	@Override
 	protected void onDraw(Canvas canvas) {
 		width = this.getWidth();
 		height = this.getHeight();
 		
 		startDrawChart(canvas);
+		handleTouchEvent(canvas);
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		if(disableTouch) {
+			return super.onTouchEvent(event);
+		}
+		
+		touchState = event.getAction();
+		final float lastTouchEventX = event.getX();
+		for (int i = 0; i < xGridCount; i++) {
+			if (lastTouchEventX <  vertex[i][0] + xGridSpace / 2
+					&& lastTouchEventX >  vertex[i][0] - xGridSpace / 2
+					&& lastTouchEventX >= vertex[0][0]
+					&& lastTouchEventX <= vertex[xGridCount - 1][0]) {
+				currentIndex = i;
+				currentVertexX = vertex[i][0];
+			}
+		}
+		
+		invalidate();
+		
+		return true;
 	}
 
 	/**
@@ -239,6 +261,24 @@ public class TrendChartView extends View {
 		drawTrendBlock(canvas);
 	}
 	
+	private void handleTouchEvent(Canvas canvas) {
+		if(touchState > 0) {
+			drawTouchCircle(canvas);
+		}
+	}
+	
+	private void drawTouchCircle(Canvas canvas) {
+		for (int i = 0; i < xGridCount; i++) {
+			if( i == currentIndex) {
+				vertextPaint.setStrokeWidth(2);
+				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 12, vertextPaint);
+			} else {
+				vertextPaint.setStrokeWidth(lineStrokeWidth);
+				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+			}
+		}
+	}
+	
 	private void drawTopTitle(Canvas canvas) {
 		paint.setColor(xTitleColor);
 		paint.setStrokeWidth(titleStrokeWidth);
@@ -309,7 +349,7 @@ public class TrendChartView extends View {
 		yGridSpace = (height - yAxisPadding * 2 - titleHeight) / yGridCount;
 		float yGridStart = height - yAxisPadding - yGridSpace;
 		
-		final PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
+		final PathEffect effects = new DashPathEffect(new float[]{4, 4, 4, 4}, 1);
 		final DecimalFormat format = new DecimalFormat("##0.00"); 
 		
 		final double minYValue = getMinY(yValueList);
@@ -380,25 +420,20 @@ public class TrendChartView extends View {
 
 		for (int i = 0; i < size; i++) {
 			vertex[i][0] = lineStart + i * xGridSpace;
+			// relative height
 			vertex[i][1] = yAxisPadding + yGridSpace + getPointY(yValueList.get(i));
 		}
 
-		paint.setStrokeWidth(4);
+		paint.setStrokeWidth(lineStrokeWidth);
 		paint.setColor(lineColor);
-		float[] pts = new float[4 * xGridCount];
 		
-		pts[0] = startXaxis;
-		pts[1] = height - vertex[0][1];
-		pts[2] = vertex[0][0];
-		pts[3] = height - vertex[0][1];
-
-		for (int i = 1; i < size; i++) {
-			pts[4 * i] = vertex[i - 1][0];
-			pts[4 * i + 1] = height - vertex[i -1][1];
-			pts[4 * i + 2] = vertex[i][0];
-			pts[4 * i + 3] = height - vertex[i][1];
+		for (int i = 0; i < size; i++) {
+			//canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+			if(i < size - 1) {
+				canvas.drawLine(vertex[i][0], height - vertex[i][1], 
+						vertex[i+1][0], height - vertex[i+1][1], paint);
+			}
 		}
-		canvas.drawLines(pts, paint);
 	}
 	
 	private float getPointY(String valueY) {

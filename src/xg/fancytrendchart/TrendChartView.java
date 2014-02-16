@@ -14,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathEffect;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
@@ -38,8 +39,9 @@ public class TrendChartView extends View {
 	private int xAxisGridEndColor = Color.WHITE;
 	private int yAxisGridColor = 0xFF129FCD;
 	
-	private int lineColor = 0x4cf7d621;
+	private int lineColor = 0xFFFC7722;
 	private int lineStartColor = 0x4cffffff;
+	private int windowColor = 0xFFFC7722;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
@@ -47,8 +49,6 @@ public class TrendChartView extends View {
 	private int lineStrokeWidth = 4;
 	private int titleStrokeWidth = 2;
 	private int xAxisStrokeWidth = 2;
-	
-	private int touchState = -2;
 	
 	private int xGridCount = 7;
 	private int yGridCount = 5;
@@ -60,7 +60,9 @@ public class TrendChartView extends View {
 	private int xAxispadding = 50;
 	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
+	private int windowheight = 30;
 	
+	private int touchState;
 	private int currentIndex = -1;
 	
 	private float width;
@@ -75,6 +77,8 @@ public class TrendChartView extends View {
 	private Paint yGridPaint;
 	private Paint blockPaint;
 	private Paint vertextPaint;
+	private Paint circlePaint;
+	private Paint windowPaint;
 	
 	private boolean disableTouch;
 	
@@ -108,6 +112,7 @@ public class TrendChartView extends View {
 		yTextpadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yTextpadding, dm);
 		titleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, titleTextSize, dm);
 		xAxisTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, xAxisTextSize, dm);
+		windowheight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, windowheight, dm);
 		
 		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FancyTrendChart);
 		drawGradient = a.getBoolean(R.styleable.FancyTrendChart_drawGradient, drawGradient);
@@ -131,6 +136,7 @@ public class TrendChartView extends View {
 		
 		vertex = new float[xGridCount][2];
 		textBounds = new Rect();
+		touchState = -2;
 		
 		paint = new Paint();
 		paint.setAntiAlias(true);
@@ -150,7 +156,16 @@ public class TrendChartView extends View {
 		vertextPaint.setAntiAlias(true);
 		vertextPaint.setStyle(Paint.Style.STROKE);
 		vertextPaint.setStrokeWidth(lineStrokeWidth);
-		vertextPaint.setColor(xAxisGridColor);
+		vertextPaint.setColor(windowColor);
+		
+		circlePaint = new Paint();
+		circlePaint.setAntiAlias(true);
+		circlePaint.setColor(Color.WHITE);
+		
+		windowPaint = new Paint();
+		windowPaint.setAntiAlias(true);
+		windowPaint.setStyle(Paint.Style.FILL);
+		windowPaint.setColor(windowColor);
 	}
 	
 	@Override
@@ -273,7 +288,8 @@ public class TrendChartView extends View {
 		
 		for (int i = 0; i < xGridCount; i++) {
 			if(touchState < 0)  {
-				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 6, vertextPaint);
+				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 4, circlePaint);
 			} else {
 				drawTouchCircle(i, canvas);
 			}
@@ -285,8 +301,10 @@ public class TrendChartView extends View {
 	private void drawTouchCircle(int i, Canvas canvas) {
 		if (i == currentIndex) {
 			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 12,vertextPaint);
+			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 10,circlePaint);
 		} else {
-			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8,vertextPaint);
+			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 6,vertextPaint);
+			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 4,circlePaint);
 		}
 	}
 	
@@ -422,7 +440,7 @@ public class TrendChartView extends View {
 		final float blockStart = startXaxis;
 		LinearGradient gradient = new LinearGradient(blockStart, height
 				- yAxisPadding, blockStart, yAxisPadding + yGridSpace,
-				lineStartColor, lineColor, Shader.TileMode.MIRROR);
+				lineStartColor, 0x4cf7d621, Shader.TileMode.MIRROR);
 		blockPaint.setShader(gradient);
 	}
 	
@@ -449,6 +467,66 @@ public class TrendChartView extends View {
 	
 	private void drawPopupWindow(Canvas canvas) {
 		
+//		float rect_w = 0;
+//		float rect_ry = 0;
+//		float rect_h = 0;
+//		float point_a,point_b;
+//		
+//		Path path = new Path(); 
+//		if (vertex[currentIndex][0] < ((rect_w * 2/3) + xAxispadding/2)) {
+//			point_a = vertex[currentIndex][0] ;
+//			point_b = point_a + rect_w / 5;
+//		}else {
+//			point_a = vertex[currentIndex][0] ;
+//			point_b = point_a - rect_w / 5;
+//		}
+//		
+//        if (vertex[currentIndex][1] >= (yAxisPadding + yGridSpace * 2)) {
+//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1]);
+//        	path.lineTo(point_a, rect_ry - rect_h);  
+//            path.lineTo(point_b, rect_ry - rect_h);  
+//        }else {
+//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1] );
+//        	path.lineTo(point_a, rect_ry);  
+//            path.lineTo(point_b, rect_ry);  
+//		}
+        
+       // path.close(); 
+        //canvas.drawPath(path, windowPaint);
+		if(touchState > 0) {
+			drawWindowRect(canvas);
+		}
+	}
+	
+	private void drawWindowRect(Canvas canvas) {
+		final String test = "AAAAAAAAAA";
+		float left = 0;
+		float top = 0;
+		float right = 0;
+		float bottom = 0;
+		
+		windowPaint.getTextBounds(test, 0, test.length(), textBounds);
+		final float textWidth = textBounds.width();
+		
+		if (currentIndex == 0) {
+			left = startXaxis - 4 * yTextpadding;
+		}else if (currentIndex == xGridCount - 1) {
+			left = vertex[currentIndex][0] - textWidth / 2 - xAxispadding;
+		}else {
+			left = vertex[currentIndex][0] - textWidth / 2 - xAxispadding/2;
+		}
+		
+		if (vertex[currentIndex][1] >= (yAxisPadding + yGridSpace * 2 )) {
+			top = height - vertex[currentIndex][1] + windowheight - 50;
+		}else {
+			top = height - vertex[currentIndex][1] - windowheight - 40;
+		}
+		
+		right = left + 3 * textWidth;
+		bottom = top + windowheight;
+		
+		RectF rect = new RectF(left, top, right, bottom);
+        canvas.drawRoundRect(rect, 8, 8, windowPaint);
 	}
 	
 	private float getPointY(String valueY) {

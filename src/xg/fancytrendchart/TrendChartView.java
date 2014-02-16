@@ -278,6 +278,8 @@ public class TrendChartView extends View {
 				drawTouchCircle(i, canvas);
 			}
 		}
+		
+		drawPopupWindow(canvas);
 	}
 	
 	private void drawTouchCircle(int i, Canvas canvas) {
@@ -437,17 +439,15 @@ public class TrendChartView extends View {
 		paint.setColor(lineColor);
 		
 		for (int i = 0; i < size; i++) {
-//			if(touchState < 0)  {
-//				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
-//			} else {
-//				drawTouchCircle(i, canvas);
-//			}
-
 			if(i < size - 1) {
 				canvas.drawLine(vertex[i][0], height - vertex[i][1], 
 						vertex[i+1][0], height - vertex[i+1][1], paint);
 			}
 		}
+	}
+	
+	private void drawPopupWindow(Canvas canvas) {
+		
 	}
 	
 	private float getPointY(String valueY) {

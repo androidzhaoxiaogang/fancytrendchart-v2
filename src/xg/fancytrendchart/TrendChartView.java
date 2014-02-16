@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -14,6 +15,7 @@ import android.graphics.Path;
 import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.graphics.Shader;
+import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -38,7 +40,6 @@ public class TrendChartView extends View {
 	
 	private int lineColor = 0x4cf7d621;
 	private int lineStartColor = 0x4cffffff;
-	private int vertexColor = 0xFFFB7722;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
@@ -60,14 +61,12 @@ public class TrendChartView extends View {
 	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
 	
-	private int currentIndex;
+	private int currentIndex = -1;
 	
 	private float width;
 	private float height;
 	private float titleHeight;
 	private float startXaxis;
-	private float lastTouchEventX;
-	private float currentVertexX;
 	
 	private float[][] vertex;
 	
@@ -82,6 +81,8 @@ public class TrendChartView extends View {
 	private String title;
 	private List<String> xValueList;
 	private List<String> yValueList;
+	
+	private Bitmap canvasBitmap;
 
 	public TrendChartView(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
@@ -157,7 +158,7 @@ public class TrendChartView extends View {
 		width = this.getWidth();
 		height = this.getHeight();
 		
-		startDrawChart(canvas);
+		startDrawChart();
 		handleTouchEvent(canvas);
 	}
 
@@ -168,6 +169,7 @@ public class TrendChartView extends View {
 		}
 		
 		touchState = event.getAction();
+		
 		final float lastTouchEventX = event.getX();
 		for (int i = 0; i < xGridCount; i++) {
 			if (lastTouchEventX <  vertex[i][0] + xGridSpace / 2
@@ -175,7 +177,6 @@ public class TrendChartView extends View {
 					&& lastTouchEventX >= vertex[0][0]
 					&& lastTouchEventX <= vertex[xGridCount - 1][0]) {
 				currentIndex = i;
-				currentVertexX = vertex[i][0];
 			}
 		}
 		
@@ -254,28 +255,36 @@ public class TrendChartView extends View {
 		yGridCount = yValueList.size();
 	}
 	
-	private void startDrawChart(Canvas canvas){
+	private void startDrawChart(){
+		if(touchState > 0) return;
+		canvasBitmap = Bitmap.createBitmap((int)width,
+				(int)height, Config.ARGB_8888);
+		Canvas canvas = new Canvas(canvasBitmap);
 		drawTopTitle(canvas);
 		drawXYAxises(canvas);
 		drawTrendLine(canvas);
 		drawTrendBlock(canvas);
+		canvas.save();
 	}
 	
 	private void handleTouchEvent(Canvas canvas) {
-		if(touchState > 0) {
-			drawTouchCircle(canvas);
+		paint.setColor(xAxisColor);
+		canvas.drawBitmap(canvasBitmap, 0, 0, paint);
+		
+		for (int i = 0; i < xGridCount; i++) {
+			if(touchState < 0)  {
+				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+			} else {
+				drawTouchCircle(i, canvas);
+			}
 		}
 	}
 	
-	private void drawTouchCircle(Canvas canvas) {
-		for (int i = 0; i < xGridCount; i++) {
-			if( i == currentIndex) {
-				vertextPaint.setStrokeWidth(2);
-				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 12, vertextPaint);
-			} else {
-				vertextPaint.setStrokeWidth(lineStrokeWidth);
-				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
-			}
+	private void drawTouchCircle(int i, Canvas canvas) {
+		if (i == currentIndex) {
+			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 12,vertextPaint);
+		} else {
+			canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8,vertextPaint);
 		}
 	}
 	
@@ -428,7 +437,12 @@ public class TrendChartView extends View {
 		paint.setColor(lineColor);
 		
 		for (int i = 0; i < size; i++) {
-			//canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+//			if(touchState < 0)  {
+//				canvas.drawCircle(vertex[i][0], height - vertex[i][1], 8, vertextPaint);
+//			} else {
+//				drawTouchCircle(i, canvas);
+//			}
+
 			if(i < size - 1) {
 				canvas.drawLine(vertex[i][0], height - vertex[i][1], 
 						vertex[i+1][0], height - vertex[i+1][1], paint);

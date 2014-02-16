@@ -418,6 +418,7 @@ public class TrendChartView extends View {
 	        yGridStart -= yGridSpace;
 		}
 		
+		//Initialize shader for trend block background.
 		final float blockStart = startXaxis;
 		LinearGradient gradient = new LinearGradient(blockStart, height
 				- yAxisPadding, blockStart, yAxisPadding + yGridSpace,

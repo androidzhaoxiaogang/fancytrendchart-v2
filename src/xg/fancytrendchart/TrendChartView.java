@@ -61,6 +61,7 @@ public class TrendChartView extends View {
 	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
 	private int windowheight = 30;
+	private int windowWidth = 80;
 	
 	private int touchState;
 	private int currentIndex = -1;
@@ -83,6 +84,7 @@ public class TrendChartView extends View {
 	private boolean disableTouch;
 	
 	private String title;
+	private String popString = "AAAAAA";
 	private List<String> xValueList;
 	private List<String> yValueList;
 	
@@ -113,6 +115,7 @@ public class TrendChartView extends View {
 		titleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, titleTextSize, dm);
 		xAxisTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, xAxisTextSize, dm);
 		windowheight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, windowheight, dm);
+		windowWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, windowWidth, dm);
 		
 		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FancyTrendChart);
 		drawGradient = a.getBoolean(R.styleable.FancyTrendChart_drawGradient, drawGradient);
@@ -268,6 +271,14 @@ public class TrendChartView extends View {
 		this.yValueList.clear();
 		this.yValueList.addAll(yValueList);
 		yGridCount = yValueList.size();
+	}
+	
+	public String getPopString() {
+		return popString;
+	}
+
+	public void setPopString(String popString) {
+		this.popString = popString;
 	}
 	
 	private void startDrawChart(){
@@ -466,54 +477,25 @@ public class TrendChartView extends View {
 	}
 	
 	private void drawPopupWindow(Canvas canvas) {
-		
-//		float rect_w = 0;
-//		float rect_ry = 0;
-//		float rect_h = 0;
-//		float point_a,point_b;
-//		
-//		Path path = new Path(); 
-//		if (vertex[currentIndex][0] < ((rect_w * 2/3) + xAxispadding/2)) {
-//			point_a = vertex[currentIndex][0] ;
-//			point_b = point_a + rect_w / 5;
-//		}else {
-//			point_a = vertex[currentIndex][0] ;
-//			point_b = point_a - rect_w / 5;
-//		}
-//		
-//        if (vertex[currentIndex][1] >= (yAxisPadding + yGridSpace * 2)) {
-//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1]);
-//        	path.lineTo(point_a, rect_ry - rect_h);  
-//            path.lineTo(point_b, rect_ry - rect_h);  
-//        }else {
-//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1] );
-//        	path.lineTo(point_a, rect_ry);  
-//            path.lineTo(point_b, rect_ry);  
-//		}
-        
-       // path.close(); 
-        //canvas.drawPath(path, windowPaint);
 		if(touchState > 0) {
 			drawWindowRect(canvas);
 		}
 	}
 	
 	private void drawWindowRect(Canvas canvas) {
-		final String test = "AAAAAAAAAA";
 		float left = 0;
 		float top = 0;
 		float right = 0;
 		float bottom = 0;
 		
-		windowPaint.getTextBounds(test, 0, test.length(), textBounds);
-		final float textWidth = textBounds.width();
+		final float textWidth = paint.measureText(popString);
 		
 		if (currentIndex == 0) {
-			left = startXaxis - 4 * yTextpadding;
+			left = startXaxis - 3 * yTextpadding;
 		}else if (currentIndex == xGridCount - 1) {
-			left = vertex[currentIndex][0] - textWidth / 2 - xAxispadding;
+			left = vertex[currentIndex][0] - windowWidth / 5 - xAxispadding;
 		}else {
-			left = vertex[currentIndex][0] - textWidth / 2 - xAxispadding/2;
+			left = vertex[currentIndex][0] - windowWidth / 5 - xAxispadding / 2;
 		}
 		
 		if (vertex[currentIndex][1] >= (yAxisPadding + yGridSpace * 2 )) {
@@ -522,11 +504,27 @@ public class TrendChartView extends View {
 			top = height - vertex[currentIndex][1] - windowheight - 40;
 		}
 		
-		right = left + 3 * textWidth;
+		right = left + windowWidth;
 		bottom = top + windowheight;
 		
 		RectF rect = new RectF(left, top, right, bottom);
         canvas.drawRoundRect(rect, 8, 8, windowPaint);
+        
+        paint.setColor(Color.WHITE);
+		final float textLeft = left + ( windowWidth - textWidth) / 2;
+        canvas.drawText(popString, textLeft, top + windowheight / 2 + 10, paint);
+	}
+	
+	private void drawTrendBlock(Canvas canvas) {
+		for (int i = 0; i < xGridCount - 1; i++) {
+			Path path = new Path();
+			path.moveTo(vertex[i][0], height - vertex[i][1]);
+			path.lineTo(vertex[i][0], height - yAxisPadding);
+			path.lineTo(vertex[i + 1][0], height - yAxisPadding);
+			path.lineTo(vertex[i + 1][0], height - vertex[i + 1][1]);
+			path.close();
+			canvas.drawPath(path, blockPaint);
+		}
 	}
 	
 	private float getPointY(String valueY) {
@@ -540,18 +538,6 @@ public class TrendChartView extends View {
 		float result = (float) (((temp - minYValue) / 
 				(maxYValue - minYValue)) * (yGridCount-1) * yGridSpace);
 		return result;
-	}
-	
-	private void drawTrendBlock(Canvas canvas) {
-		for (int i = 0; i < xGridCount - 1; i++) {
-			Path path = new Path();
-			path.moveTo(vertex[i][0], height - vertex[i][1]);
-			path.lineTo(vertex[i][0], height - yAxisPadding);
-			path.lineTo(vertex[i + 1][0], height - yAxisPadding);
-			path.lineTo(vertex[i + 1][0], height - vertex[i + 1][1]);
-			path.close();
-			canvas.drawPath(path, blockPaint);
-		}
 	}
 	
 	private double getMaxY(List<String> yValueList) {

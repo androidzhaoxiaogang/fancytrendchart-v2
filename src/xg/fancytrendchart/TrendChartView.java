@@ -466,33 +466,6 @@ public class TrendChartView extends View {
 	}
 	
 	private void drawPopupWindow(Canvas canvas) {
-		
-//		float rect_w = 0;
-//		float rect_ry = 0;
-//		float rect_h = 0;
-//		float point_a,point_b;
-//		
-//		Path path = new Path(); 
-//		if (vertex[currentIndex][0] < ((rect_w * 2/3) + xAxispadding/2)) {
-//			point_a = vertex[currentIndex][0] ;
-//			point_b = point_a + rect_w / 5;
-//		}else {
-//			point_a = vertex[currentIndex][0] ;
-//			point_b = point_a - rect_w / 5;
-//		}
-//		
-//        if (vertex[currentIndex][1] >= (yAxisPadding + yGridSpace * 2)) {
-//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1]);
-//        	path.lineTo(point_a, rect_ry - rect_h);  
-//            path.lineTo(point_b, rect_ry - rect_h);  
-//        }else {
-//        	path.moveTo(vertex[currentIndex][0], height - vertex[currentIndex][1] );
-//        	path.lineTo(point_a, rect_ry);  
-//            path.lineTo(point_b, rect_ry);  
-//		}
-        
-       // path.close(); 
-        //canvas.drawPath(path, windowPaint);
 		if(touchState > 0) {
 			drawWindowRect(canvas);
 		}
